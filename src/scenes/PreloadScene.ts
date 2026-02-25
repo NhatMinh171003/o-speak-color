@@ -97,9 +97,27 @@ export default class PreloadScene extends Phaser.Scene {
     }
 
     create() {
+        // Request quyền microphone sớm để không bị delay khi bé bắt đầu đọc
+        this.requestMicPermission();
+
         // Load Howler audio trước, rồi mới chuyển scene
         AudioManager.loadAll().then(() => {
             this.scene.start(SceneKeys.SpeakScene);
         });
+    }
+
+    /**
+     * Xin quyền microphone ngay khi vào game.
+     * Nếu user từ chối thì chỉ log warning, không block game.
+     */
+    private async requestMicPermission(): Promise<void> {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Đã được cấp quyền — dừng stream ngay để không giữ mic
+            stream.getTracks().forEach(track => track.stop());
+            console.log('Đã cấp quyền microphone');
+        } catch (err) {
+            console.warn('Cấp quyên microphone lỗi:', err);
+        }
     }
 }
