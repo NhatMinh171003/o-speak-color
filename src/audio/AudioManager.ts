@@ -235,11 +235,42 @@ class AudioManager {
     }
 
     /**
-     * Khôi phục audio sau khi ghi âm (iOS workaround)
+     * Khôi phục audio sau khi ghi âm (Mobile workaround)
+     * Mobile browsers duck audio khi mic hoạt động, cần thời gian để phục hồi.
+     * Method này resume context + phát silent sound để kick audio pipeline.
+     * @returns Promise resolve sau khi audio đã sẵn sàng phát lại bình thường
      */
     async restoreAudioAfterRecording(): Promise<void> {
         this.ensureContextRunning();
         await this.unlockAudioAsync();
+
+        // Phát silent sound để warm-up audio pipeline sau khi mic tắt
+        return this.warmUpAudio();
+    }
+
+    /**
+     * Phát 1 âm thanh câm ngắn để "warm-up" audio pipeline
+     * Giúp browser re-route audio output về full volume sau mic ducking
+     */
+    private warmUpAudio(): Promise<void> {
+        return new Promise<void>((resolve) => {
+            try {
+                const silent = new Howl({
+                    src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
+                    volume: 0.01,
+                    html5: false,
+                });
+                silent.once('end', () => {
+                    silent.unload();
+                    resolve();
+                });
+                // Fallback nếu sound không play được
+                setTimeout(() => resolve(), 200);
+                silent.play();
+            } catch {
+                resolve();
+            }
+        });
     }
 
     /**

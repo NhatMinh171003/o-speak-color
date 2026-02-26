@@ -60,9 +60,9 @@ export const GameConstants = {
         BOARD: { X: 0.5, Y: 0.54, SCALE: 0.7, ALPHA: 1.0 },
         TITLE: { X: 0.27, Y: 0.47, SCALE: 0.7 },
         EXCERPT: { X: 0.245, Y: 0.51, SCALE: 0.70 },
-        AUTHOR: { X: 0.40, Y: 0.84, SCALE: 0.6 },
+        AUTHOR: { X: 0.40, Y: 0.80, SCALE: 0.6 },
         SMILE_D: { X: 0.28, Y: 0.27, SCALE: 0.6 },
-        CONTENT: { X: 0.35, Y: 0.70, SCALE: 0.70 },
+        CONTENT: { X: 0.35, Y: 0.65, SCALE: 0.70 },
         ILLUSTRATION: { X: 0.661, Y: 0.391, SCALE: 0.55 },
         SPEAKER: { X: 0.78, Y: 0.88, SCALE: 0.8 },
         MICRO: { X: 0.78, Y: 0.75, SCALE: 0.8 },
@@ -75,10 +75,10 @@ export const GameConstants = {
             LINE_DELAY: 1000,
             TRANSITION_DURATION: 300,
             LINES: [
-                { startX: 0.2, endX: 0.35, y: 0.63, duration: 1000 },
-                { startX: 0.2, endX: 0.48, y: 0.68, duration: 1500 },
+                { startX: 0.2, endX: 0.36, y: 0.58, duration: 1000 },
+                { startX: 0.2, endX: 0.48, y: 0.63, duration: 1500 },
+                { startX: 0.2, endX: 0.4, y: 0.69, duration: 1200 },
                 { startX: 0.2, endX: 0.4, y: 0.74, duration: 1200 },
-                { startX: 0.2, endX: 0.4, y: 0.79, duration: 1200 },
             ]
         },
         SCORE_BOARD: {
@@ -93,7 +93,7 @@ export const GameConstants = {
             FRAMES: ['ani_speak1', 'ani_speak2', 'ani_speak3']
         },
         LINE_MASKS: {
-            ENABLED: true, BOX_HEIGHT: 0.07,
+            ENABLED: true, BOX_HEIGHT: 0.053,
             BOX_COLOR: 0xFFFFFF, BOX_ALPHA: 1,
             PADDING_X: 0.017, OFFSET_Y_UP: 0.01,
         },

@@ -798,7 +798,12 @@ export default class SpeakScene extends SceneBase {
 
                 // Block loa trong khi phát prompt
                 this.isSpeaking = true;
-                AudioManager.play(promptKey);
+
+                // Đợi audio pipeline phục hồi sau mic ducking trước khi phát prompt
+                // Mobile browsers cần thời gian để restore volume sau khi tắt mic
+                AudioManager.restoreAudioAfterRecording().then(() => {
+                    AudioManager.play(promptKey);
+                });
 
                 // Reveal dòng tiếp và hiện bàn tay chỉ dẫn NGAY KHI audio bắt đầu phát
                 this.lineMasks.revealNextLine();
