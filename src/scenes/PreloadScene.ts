@@ -35,6 +35,8 @@ export default class PreloadScene extends Phaser.Scene {
         this.load.image(TextureKeys.Speak_AniSpeak1, 'assets/images/SpeakScene/ani_speak1.png');
         this.load.image(TextureKeys.Speak_AniSpeak2, 'assets/images/SpeakScene/ani_speak2.png');
         this.load.image(TextureKeys.Speak_AniSpeak3, 'assets/images/SpeakScene/ani_speak3.png');
+        this.load.image(TextureKeys.Speak_Excerpt, 'assets/images/SpeakScene/excerpt.png');
+        this.load.image(TextureKeys.Speak_Author, 'assets/images/SpeakScene/author.png');
 
         // ========================================
         // 3. Mascot Animations (Sprite Sheets)

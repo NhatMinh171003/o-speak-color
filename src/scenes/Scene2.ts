@@ -139,10 +139,10 @@ export default class Scene2 extends Phaser.Scene {
         const cx = GameUtils.pctX(this, 0.5);
 
         const bannerY = GameUtils.pctY(this, UI.BANNER_Y);
-        const banner = this.add.image(cx, bannerY, TextureKeys.S2_Banner).setOrigin(0.5, 0).setScale(0.7);
+        const banner = this.add.image(cx, bannerY, TextureKeys.S2_Banner).setOrigin(0.5, 0).setScale(0.5, 0.65);
 
         const textY = bannerY + banner.displayHeight / 2;
-        this.add.image(cx, textY, TextureKeys.S2_TextBanner).setScale(0.7);
+        this.add.image(cx, textY, TextureKeys.S2_TextBanner).setScale(0.68, 0.7);
 
         const boardY = banner.displayHeight + GameUtils.pctY(this, UI.BOARD_OFFSET);
         this.add.image(cx, boardY, TextureKeys.S2_Board).setOrigin(0.5, 0).setScale(0.7);

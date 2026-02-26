@@ -56,8 +56,11 @@ export const GameConstants = {
     // =========================================
     SPEAK_SCENE: {
         BANNER: { X: 0.5, Y: 0.01, SCALE: 0.65 },
+        // BANNER_TEXT: { X: 0.5, Y: 0.08, SCALE: 0.7 },
         BOARD: { X: 0.5, Y: 0.54, SCALE: 0.7, ALPHA: 1.0 },
-        TITLE: { X: 0.35, Y: 0.47, SCALE: 0.7 },
+        TITLE: { X: 0.27, Y: 0.47, SCALE: 0.7 },
+        EXCERPT: { X: 0.245, Y: 0.51, SCALE: 0.70 },
+        AUTHOR: { X: 0.40, Y: 0.84, SCALE: 0.6 },
         SMILE_D: { X: 0.28, Y: 0.27, SCALE: 0.6 },
         CONTENT: { X: 0.35, Y: 0.70, SCALE: 0.70 },
         ILLUSTRATION: { X: 0.661, Y: 0.391, SCALE: 0.55 },

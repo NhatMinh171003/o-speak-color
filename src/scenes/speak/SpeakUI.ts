@@ -50,6 +50,14 @@ export class SpeakUI {
         this.scene.add.image(this.w * CFG.TITLE.X, this.h * CFG.TITLE.Y, TextureKeys.Speak_Title)
             .setScale(CFG.TITLE.SCALE);
 
+        // chữ "Trích"
+        this.scene.add.image(this.w * CFG.EXCERPT.X, this.h * CFG.EXCERPT.Y, TextureKeys.Speak_Excerpt)
+            .setScale(CFG.EXCERPT.SCALE);
+
+        // Tên tác giả
+        this.scene.add.image(this.w * CFG.AUTHOR.X, this.h * CFG.AUTHOR.Y, TextureKeys.Speak_Author)
+            .setScale(CFG.AUTHOR.SCALE);
+
         // 4. SMILE D ICON với animation
         const smileD = this.scene.add.image(this.w * CFG.SMILE_D.X, this.h * CFG.SMILE_D.Y, TextureKeys.Speak_SmileD)
             .setScale(CFG.SMILE_D.SCALE);

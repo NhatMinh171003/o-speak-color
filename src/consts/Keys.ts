@@ -20,6 +20,8 @@ export enum TextureKeys {
 
     // --- SpeakScene (Đọc thơ) ---
     Speak_Banner = 'speak_banner',
+    Speak_Excerpt = 'speak_excerpt',
+    Speak_Author = 'speak_author',
     Speak_Title = 'speak_title',
     Speak_Content = 'speak_content',
     Speak_Illustration = 'speak_illustration',
