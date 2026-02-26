@@ -641,47 +641,34 @@ export class VoiceHandler {
     }
 
     /**
-     * Mobile Audio Fix: Restore audio volume after recording
-     * Mobile browsers (Safari, Chrome) automatically duck (reduce) audio volume when microphone is active.
+     * Safari Audio Fix: Restore audio volume after recording
+     * Safari automatically ducks (reduces) audio volume when microphone is active.
      * This method ensures audio is restored to normal volume after recording stops.
-     * Needs sufficient delay for the OS-level audio routing to recover.
      */
     private restoreAudioAfterRecording(): void {
-        // Đợi đủ lâu để OS-level audio ducking phục hồi (300ms cho Android, 500ms+ cho iOS)
+        // Đợi một chút để Safari cleanup xong
         setTimeout(() => {
             try {
                 // 1. Resume Howler AudioContext nếu bị suspended
                 if (Howler.ctx && Howler.ctx.state === 'suspended') {
-                    console.log('[VoiceHandler] Audio fix: Resuming Howler AudioContext...');
+                    console.log('[VoiceHandler] Safari fix: Resuming Howler AudioContext...');
                     Howler.ctx.resume().then(() => {
-                        console.log('[VoiceHandler] Audio fix: AudioContext resumed');
+                        console.log('[VoiceHandler] Safari fix: AudioContext resumed');
                     }).catch((e) => {
-                        console.warn('[VoiceHandler] Audio fix: Failed to resume AudioContext', e);
+                        console.warn('[VoiceHandler] Safari fix: Failed to resume AudioContext', e);
                     });
                 }
 
-                // 2. Reset Howler global volume để force browser refresh audio routing
+                // 2. Reset Howler global volume để force Safari refresh audio routing
                 const currentVolume = Howler.volume();
-                // Không cần set 0 rồi set lại
-                // Chỉ cần resume ctx + silent kick là đủ
+                Howler.volume(0);
                 Howler.volume(currentVolume || 1.0);
-
-                // 3. Phát 1 silent sound ngắn qua Howler để "kick" audio pipeline trở lại bình thường
-                // Điều này buộc browser phải re-route audio output ở full volume
-                const silentKick = new Howl({
-                    src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
-                    volume: 0.01,
-                    html5: false, // Dùng Web Audio API để đảm bảo đi qua cùng audio context
-                });
-                silentKick.once('end', () => silentKick.unload());
-                silentKick.play();
-
-                console.log('[VoiceHandler] Audio fix: Reset volume + silent kick played');
+                console.log('[VoiceHandler] Safari fix: Reset Howler volume to', currentVolume || 1.0);
 
             } catch (e) {
-                console.warn('[VoiceHandler] Audio fix: Error restoring audio', e);
+                console.warn('[VoiceHandler] Safari fix: Error restoring audio', e);
             }
-        }, 300);
+        }, 100);
     }
 
     /**
