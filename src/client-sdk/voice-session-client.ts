@@ -146,7 +146,7 @@ export interface ApiError {
 
 // ==================== Configuration ====================
 
-const BASE_URL = "https://iruka-cors-proxy-h7j3ksnhva-as.a.run.app"
+const BASE_URL = "https://iruka-api-h7j3ksnhva-as.a.run.app"
 const API_VERSION = "v1";
 
 /**

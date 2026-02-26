@@ -54,7 +54,6 @@ export default class PreloadScene extends Phaser.Scene {
         this.load.image(TextureKeys.S2_Board, 'assets/images/bg/board_scene_2.png');
 
         this.load.image(TextureKeys.S2_O_Outline, 'assets/images/S2/o_outline.png');
-        this.load.image(TextureKeys.S2_O_Body, 'assets/images/S2/o_body.png');
 
         this.load.image(TextureKeys.S2_Balloon_Outline, 'assets/images/S2/balloon_line.png');
         this.load.image(TextureKeys.S2_Balloon_1, 'assets/images/S2/balloon_1.png');

@@ -25,11 +25,11 @@ export const GameConstants = {
     // BACKEND SESSION CONFIG
     // =========================================
     BACKEND_SESSION: {
-        GAME_ID: 'speak-matching-g-game',
-        LESSON_ID: 'lesson-g-5-6',
+        GAME_ID: 'speak-matching-o-game',
+        LESSON_ID: 'lesson-o-3-4',
         GAME_VERSION: '1.0.0',
-        AGE_LEVEL: '5-6',
-        DEFAULT_CHILD_ID: 'trung_hung_chu',
+        AGE_LEVEL: '3-4',
+        DEFAULT_CHILD_ID: 'cao_nhat_minh',
     },
 
     // =========================================
@@ -40,7 +40,7 @@ export const GameConstants = {
         SILENCE_TIMEOUT: 3000,
         CALIBRATION_DURATION: 2000,
         NOISE_MARGIN: 2,
-        KEYWORDS: 'Gánh gánh gồng gồng Gánh sông gánh núi Gánh củi gánh cành Tay chạy cho nhanh Về xây nhà bếp',
+        KEYWORDS: 'Ò ó o o o Chú gà trống choàng tỉnh Vội gáy rõ thật to Gọi bé đi đến lớp',
         API_URL: 'https://voice-eval-api-h7j3ksnhva-as.a.run.app/api/v1/voice/eval/5-6',
         API_URL_DEV: 'https://voice-eval-api-h7j3ksnhva-as.a.run.app/api/v1/voice/eval/5-6',
         TEST_MODE: false,
@@ -59,7 +59,7 @@ export const GameConstants = {
         BOARD: { X: 0.5, Y: 0.54, SCALE: 0.7, ALPHA: 1.0 },
         TITLE: { X: 0.35, Y: 0.47, SCALE: 0.7 },
         SMILE_D: { X: 0.28, Y: 0.27, SCALE: 0.6 },
-        CONTENT: { X: 0.35, Y: 0.70, SCALE: 0.80 },
+        CONTENT: { X: 0.35, Y: 0.70, SCALE: 0.70 },
         ILLUSTRATION: { X: 0.661, Y: 0.391, SCALE: 0.55 },
         SPEAKER: { X: 0.78, Y: 0.88, SCALE: 0.8 },
         MICRO: { X: 0.78, Y: 0.75, SCALE: 0.8 },
@@ -72,8 +72,8 @@ export const GameConstants = {
             LINE_DELAY: 1000,
             TRANSITION_DURATION: 300,
             LINES: [
-                { startX: 0.2, endX: 0.35, y: 0.62, duration: 1000 },
-                { startX: 0.2, endX: 0.5, y: 0.68, duration: 1500 },
+                { startX: 0.2, endX: 0.35, y: 0.63, duration: 1000 },
+                { startX: 0.2, endX: 0.48, y: 0.68, duration: 1500 },
                 { startX: 0.2, endX: 0.4, y: 0.74, duration: 1200 },
                 { startX: 0.2, endX: 0.4, y: 0.79, duration: 1200 },
             ]
@@ -119,53 +119,7 @@ export const GameConstants = {
         }
     },
 
-    // =========================================
-    // SCENE 1 (Legacy - không dùng nữa)
-    // =========================================
-    SCENE1: {
-        UI: {
-            /** Vị trí Y của Banner (Tỉ lệ 0.0 - 1.0 so với chiều cao màn hình) */
-            BANNER_Y: 0.01,
-            /** Khoảng cách từ đáy Banner xuống đỉnh Bảng (Tỉ lệ màn hình) */
-            BOARD_OFFSET: 0.03,
-            /** Khoảng cách lề trái/phải của 2 bảng (Tỉ lệ màn hình) */
-            BOARD_MARGIN_X: 0.01,
-            /** Vị trí Mưa: Nằm ở 45% chiều cao của cái Bảng */
-            RAIN_OFFSET: 0.45,
-            /** Vị trí Thơ: Cách đáy Mưa 5% màn hình */
-            POEM_OFFSET: 0.05,
 
-            /** Icon O lệch trái 13% chiều rộng bảng */
-            ICON_O_X: 0.13,
-            /** Icon O lệch xuống 2% chiều cao màn hình */
-            ICON_O_Y: 0.02,
-
-            /** Item lệch trục X so với tâm bảng (Tỉ lệ chiều rộng bảng) */
-            ITEM_OFFSET_X: 0.15,
-            /** Item lệch trục Y so với tâm bảng (Tỉ lệ chiều rộng bảng) */
-            ITEM_OFFSET_Y: 0.35,
-        },
-        ANIM: {
-            /** Thời gian vật nhấp nhô (Floating) (ms) */
-            FLOAT: 1500,
-            /** Thời gian bài thơ nhấp nhô (ms) */
-            POEM_FLOAT: 1200,
-            /** Thời gian icon lắc lư (ms) */
-            ICON_SHAKE: 400,
-            /** Thời gian rung lắc khi chọn Sai (ms) */
-            WRONG_SHAKE: 80,
-            /** Thời gian hiện Popup thắng (ms) */
-            WIN_POPUP: 600,
-        },
-        TIMING: {
-            /** Delay sau khi đọc xong câu đố mới bắt đầu tính Idle (ms) */
-            DELAY_IDLE: 1000,
-            /** Delay chuyển sang Scene 2 (ms) */
-            DELAY_NEXT: 1000,
-            /** Chờ đọc xong voice "Cái ô" mới phát SFX vỗ tay (ms) */
-            DELAY_CORRECT_SFX: 1500,
-        }
-    },
 
     // =========================================
     // SCENE 2: TÔ MÀU

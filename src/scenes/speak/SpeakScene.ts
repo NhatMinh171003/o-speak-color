@@ -800,17 +800,20 @@ export default class SpeakScene extends SceneBase {
                 this.isSpeaking = true;
                 AudioManager.play(promptKey);
 
-                // Chờ audio prompt xong mới reveal dòng và cho nhấn mic
+                // Reveal dòng tiếp và hiện bàn tay chỉ dẫn NGAY KHI audio bắt đầu phát
+                this.lineMasks.revealNextLine();
+                this.ensurePronunItemForLine(this.lineMasks.currentLine);
+                console.log(`[SpeakScene] Revealed line ${this.lineMasks.currentLine + 1} simultaneously with prompt audio`);
+
+                // Hiện reading finger chỉ dọc dòng thơ trong khi prompt phát
+                this.readingFinger.startSingleLineAnimation(this.lineMasks.currentLine);
+
+                // Chờ audio prompt xong mới cho nhấn mic
                 const promptDuration = AudioManager.getDuration(promptKey) || 2;
                 this.time.delayedCall((promptDuration + 0.3) * 1000, () => {
                     if (this.isGameActive) {
                         // Prompt phát xong → cho phép ấn loa lại
                         this.isSpeaking = false;
-
-                        // Reveal dòng tiếp theo SAU KHI audio xong
-                        this.lineMasks.revealNextLine();
-                        this.ensurePronunItemForLine(this.lineMasks.currentLine);
-                        console.log(`[SpeakScene] Revealed line ${this.lineMasks.currentLine + 1}, ready for mic`);
 
                         // RE-ENABLE mic + bắt đầu loop hint
                         this.isMicVisible = true;
@@ -860,10 +863,10 @@ export default class SpeakScene extends SceneBase {
     /**
      * Bước 2: End backend session - Sử dụng voice.EndSession từ SDK
      */
-    private async endBackendSession(isUserAborted: boolean = false): Promise<void> {
+    private async endBackendSession(isUserAborted: boolean = false): Promise<number | null> {
         if (!this.sessionStarted) {
             console.warn('[SpeakScene] No active session to end');
-            return;
+            return null;
         }
 
         try {
@@ -887,10 +890,12 @@ export default class SpeakScene extends SceneBase {
             });
 
             localStorage.removeItem('voice_session_id');
+            return response.finalScore ?? null;
         } catch (error) {
             console.error('[SpeakScene] Failed to end backend session:', error);
             this.sessionStarted = false;
             localStorage.removeItem('voice_session_id');
+            return null;
         }
     }
 
@@ -912,7 +917,15 @@ export default class SpeakScene extends SceneBase {
         try {
             // CHỜ TẤT CẢ API SUBMIT XONG TRƯỚC KHI END SESSION
             // Đảm bảo tất cả các line (kể cả line 6) đã submit xong
-            const finalScore = await this.lineScores.getFinalScore();
+            const localScore = await this.lineScores.getFinalScore();
+
+            // END SESSION SAU KHI TẤT CẢ API ĐÃ SUBMIT XONG
+            // Đảm bảo line 6 đã submit xong trước khi end session
+            const backendScore = await this.endBackendSession(false);
+
+            // Dùng điểm từ backend làm source of truth, fallback sang local nếu không có
+            const finalScore = backendScore ?? localScore;
+            console.log(`[SpeakScene] Scores - backend: ${backendScore}, local: ${localScore}, using: ${finalScore}`);
 
             // Logic Pass/Retry
             const isRetryRange = finalScore >= 4 && finalScore <= 5;
@@ -928,10 +941,6 @@ export default class SpeakScene extends SceneBase {
 
             // Dừng mascot Processing (loading xong)
             this.mascotProcessing.stop();
-
-            // END SESSION SAU KHI TẤT CẢ API ĐÃ SUBMIT XONG
-            // Đảm bảo line 6 đã submit xong trước khi end session
-            await this.endBackendSession(false);
 
             // Hiển thị Score Board (vẫn giữ board trắng)
             this.speakUI.showScoreBoard(finalScore);
