@@ -249,24 +249,35 @@ class AudioManager {
     }
 
     /**
-     * Phát 1 âm thanh câm ngắn để "warm-up" audio pipeline
-     * Giúp browser re-route audio output về full volume sau mic ducking
+     * Phát 1 buffer câm cực ngắn qua Web Audio API trực tiếp (không qua Howl)
+     * Để "warm-up" audio pipeline mà không đè/xung đột với các Howl sound khác
      */
     private warmUpAudio(): Promise<void> {
         return new Promise<void>((resolve) => {
             try {
-                const silent = new Howl({
-                    src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
-                    volume: 0.01,
-                    html5: false,
-                });
-                silent.once('end', () => {
-                    silent.unload();
+                const ctx = Howler.ctx;
+                if (!ctx) { resolve(); return; }
+
+                // Tạo buffer câm 1 frame (không âm thanh thật)
+                const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+                const source = ctx.createBufferSource();
+                source.buffer = buffer;
+
+                // Kết nối với gain node volume cực nhỏ để không ảnh hưởng audio khác
+                const gain = ctx.createGain();
+                gain.gain.value = 0.001;
+                source.connect(gain);
+                gain.connect(ctx.destination);
+
+                source.onended = () => {
+                    source.disconnect();
+                    gain.disconnect();
                     resolve();
-                });
-                // Fallback nếu sound không play được
-                setTimeout(() => resolve(), 200);
-                silent.play();
+                };
+                source.start();
+
+                // Fallback nếu onended không fire
+                setTimeout(() => resolve(), 150);
             } catch {
                 resolve();
             }
