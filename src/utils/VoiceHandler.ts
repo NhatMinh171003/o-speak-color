@@ -662,7 +662,8 @@ export class VoiceHandler {
 
                 // 2. Reset Howler global volume để force browser refresh audio routing
                 const currentVolume = Howler.volume();
-                Howler.volume(0);
+                // Không cần set 0 rồi set lại
+                // Chỉ cần resume ctx + silent kick là đủ
                 Howler.volume(currentVolume || 1.0);
 
                 // 3. Phát 1 silent sound ngắn qua Howler để "kick" audio pipeline trở lại bình thường
