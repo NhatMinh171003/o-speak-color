@@ -10,6 +10,7 @@
  */
 
 import { GameConstants } from '../consts/GameConstants';
+import { Howler } from 'howler';
 
 export interface VoiceEvalResponse {
     status: 'perfect' | 'good' | 'almost' | 'retry';
@@ -82,13 +83,13 @@ export class VoiceHandler {
     // Callbacks
     private onStateChange?: (state: RecordingState) => void;
     private onVolumeChange?: (volume: number, isAboveThreshold: boolean) => void;
-    private onComplete?: (audioBlob: Blob) => Promise<void> | void;
+    private onComplete?: (audioBlob: Blob) => void;
     private onError?: (error: string) => void;
 
     constructor(callbacks?: {
         onStateChange?: (state: RecordingState) => void;
         onVolumeChange?: (volume: number, isAboveThreshold: boolean) => void;
-        onComplete?: (audioBlob: Blob) => Promise<void> | void;
+        onComplete?: (audioBlob: Blob) => void;
         onError?: (error: string) => void;
     }) {
         this.onStateChange = callbacks?.onStateChange;
@@ -467,17 +468,13 @@ export class VoiceHandler {
             // Convert to WAV (nếu cần)
             const wavBlob = await this.convertToWav(audioBlob);
 
-            // === MOBILE FIX: Giải phóng mic tracks TRƯỚC khi gọi callback ===
-            // cleanup() phải chạy TRƯỚC onComplete để OS có thời gian recover từ audio ducking.
-            // Nếu cleanup() chạy SAU (trong finally) → OS re-route audio đúng lúc sound bắt đầu phát → silent gap.
-            this.cleanup();
-
-            // Callback với audio blob (sau khi mic đã được giải phóng)
-            await this.onComplete?.(wavBlob);
+            // Callback với audio blob
+            this.onComplete?.(wavBlob);
 
         } catch (err) {
             console.error('VoiceHandler: Failed to process recording', err);
             this.onError?.('Lỗi xử lý ghi âm');
+        } finally {
             this.cleanup();
         }
     }
@@ -635,10 +632,43 @@ export class VoiceHandler {
         this.speechVolumeAvg = 0;
         this.speechSampleCount = 0;
 
-        // Audio restore được xử lý bởi SpeakVoice (await AudioManager.restoreAudioAfterRecording())
-        // KHÔNG restore ở đây để tránh Howler.volume(0) bắn vào giữa sound đang phát
+        // ===== SAFARI FIX: Restore audio volume after recording =====
+        // Safari có xu hướng giảm volume của audio output khi dùng microphone (ducking)
+        // Cần resume AudioContext và set lại volume sau khi dừng ghi âm
+        this.restoreAudioAfterRecording();
 
         this.setState('idle');
+    }
+
+    /**
+     * Safari Audio Fix: Restore audio volume after recording
+     * Safari automatically ducks (reduces) audio volume when microphone is active.
+     * This method ensures audio is restored to normal volume after recording stops.
+     */
+    private restoreAudioAfterRecording(): void {
+        // Đợi một chút để Safari cleanup xong
+        setTimeout(() => {
+            try {
+                // 1. Resume Howler AudioContext nếu bị suspended
+                if (Howler.ctx && Howler.ctx.state === 'suspended') {
+                    console.log('[VoiceHandler] Safari fix: Resuming Howler AudioContext...');
+                    Howler.ctx.resume().then(() => {
+                        console.log('[VoiceHandler] Safari fix: AudioContext resumed');
+                    }).catch((e) => {
+                        console.warn('[VoiceHandler] Safari fix: Failed to resume AudioContext', e);
+                    });
+                }
+
+                // 2. Reset Howler global volume để force Safari refresh audio routing
+                const currentVolume = Howler.volume();
+                Howler.volume(0);
+                Howler.volume(currentVolume || 1.0);
+                console.log('[VoiceHandler] Safari fix: Reset Howler volume to', currentVolume || 1.0);
+
+            } catch (e) {
+                console.warn('[VoiceHandler] Safari fix: Error restoring audio', e);
+            }
+        }, 100);
     }
 
     /**
