@@ -10,7 +10,6 @@
  */
 
 import { GameConstants } from '../consts/GameConstants';
-import { Howler } from 'howler';
 
 export interface VoiceEvalResponse {
     status: 'perfect' | 'good' | 'almost' | 'retry';
@@ -468,13 +467,17 @@ export class VoiceHandler {
             // Convert to WAV (nếu cần)
             const wavBlob = await this.convertToWav(audioBlob);
 
-            // Callback với audio blob
-            this.onComplete?.(wavBlob);
+            // MOBILE FIX: cleanup() TRƯỚC khi await onComplete
+            // Mic tracks phải stop trước để OS bắt đầu un-duck NGAY
+            // Nếu cleanup() sau (finally) → OS re-route audio đúng lúc sound đang phát → silent gap
+            this.cleanup();
+
+            // await để đợi SpeakVoice.restoreAudioAfterRecording() xong trước khi về
+            await this.onComplete?.(wavBlob);
 
         } catch (err) {
             console.error('VoiceHandler: Failed to process recording', err);
             this.onError?.('Lỗi xử lý ghi âm');
-        } finally {
             this.cleanup();
         }
     }
@@ -632,43 +635,10 @@ export class VoiceHandler {
         this.speechVolumeAvg = 0;
         this.speechSampleCount = 0;
 
-        // ===== SAFARI FIX: Restore audio volume after recording =====
-        // Safari có xu hướng giảm volume của audio output khi dùng microphone (ducking)
-        // Cần resume AudioContext và set lại volume sau khi dừng ghi âm
-        this.restoreAudioAfterRecording();
+        // Audio restore được xử lý bởi SpeakVoice (await AudioManager.restoreAudioAfterRecording())
+        // KHÔNG restore ở đây để tránh Howler.volume(0) bắn vào giữa sound đang phát
 
         this.setState('idle');
-    }
-
-    /**
-     * Safari Audio Fix: Restore audio volume after recording
-     * Safari automatically ducks (reduces) audio volume when microphone is active.
-     * This method ensures audio is restored to normal volume after recording stops.
-     */
-    private restoreAudioAfterRecording(): void {
-        // Đợi một chút để Safari cleanup xong
-        setTimeout(() => {
-            try {
-                // 1. Resume Howler AudioContext nếu bị suspended
-                if (Howler.ctx && Howler.ctx.state === 'suspended') {
-                    console.log('[VoiceHandler] Safari fix: Resuming Howler AudioContext...');
-                    Howler.ctx.resume().then(() => {
-                        console.log('[VoiceHandler] Safari fix: AudioContext resumed');
-                    }).catch((e) => {
-                        console.warn('[VoiceHandler] Safari fix: Failed to resume AudioContext', e);
-                    });
-                }
-
-                // 2. Reset Howler global volume để force Safari refresh audio routing
-                const currentVolume = Howler.volume();
-                Howler.volume(0);
-                Howler.volume(currentVolume || 1.0);
-                console.log('[VoiceHandler] Safari fix: Reset Howler volume to', currentVolume || 1.0);
-
-            } catch (e) {
-                console.warn('[VoiceHandler] Safari fix: Error restoring audio', e);
-            }
-        }, 100);
     }
 
     /**
