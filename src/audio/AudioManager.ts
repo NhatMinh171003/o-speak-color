@@ -257,15 +257,19 @@ class AudioManager {
             try {
                 const silent = new Howl({
                     src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
-                    volume: 0.01,
-                    html5: false,
+                    volume: 0.001,
+                    html5: this.useHtml5, // Dùng CÙNG pipeline với các sound trong game (html5 trên iOS)
                 });
                 silent.once('end', () => {
                     silent.unload();
                     resolve();
                 });
-                // Fallback nếu sound không play được
-                setTimeout(() => resolve(), 200);
+                silent.once('playerror', () => {
+                    silent.unload();
+                    resolve();
+                });
+                // Fallback timeout nếu sound không fire event
+                setTimeout(() => resolve(), 500); // 500ms để iOS có đủ thời gian recover
                 silent.play();
             } catch {
                 resolve();

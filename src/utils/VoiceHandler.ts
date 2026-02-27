@@ -467,13 +467,17 @@ export class VoiceHandler {
             // Convert to WAV (nếu cần)
             const wavBlob = await this.convertToWav(audioBlob);
 
-            // Callback với audio blob
-            this.onComplete?.(wavBlob);
+            // === MOBILE FIX: Giải phóng mic tracks TRƯỚC khi gọi callback ===
+            // cleanup() phải chạy TRƯỚC onComplete để OS có thời gian recover từ audio ducking.
+            // Nếu cleanup() chạy SAU (trong finally) → OS re-route audio đúng lúc sound bắt đầu phát → silent gap.
+            this.cleanup();
+
+            // Callback với audio blob (sau khi mic đã được giải phóng)
+            await this.onComplete?.(wavBlob);
 
         } catch (err) {
             console.error('VoiceHandler: Failed to process recording', err);
             this.onError?.('Lỗi xử lý ghi âm');
-        } finally {
             this.cleanup();
         }
     }
