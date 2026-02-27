@@ -294,32 +294,40 @@ class AudioManager {
     }
 
     /**
-     * Restore audio sau khi ghi âm (Android + iOS fix)
-     * - Android: OS duck audio ở hardware level khi mic active, cần ~300ms để un-duck
-     * - iOS/Safari: AudioContext có thể bị suspended, cần resume
-     * QUAN TRỌNG: Method này phải là async và được await bởi caller
+     * Mobile/Safari Fix: Restore audio after microphone usage.
+     * Mobile browsers duck (reduce) audio output when mic is active.
+     * Must be AWAITED before playing any sound after recording stops.
+     * 
+     * Flow: resume AudioContext → wait for OS duck recovery → silent kick → done
      */
     async restoreAudioAfterRecording(): Promise<void> {
         try {
-            // 1. Resume AudioContext nếu bị suspended (iOS)
+            // 1. Resume AudioContext nếu bị suspended
             if (Howler.ctx && Howler.ctx.state === 'suspended') {
-                console.log('[AudioManager] restoreAudio: Resuming suspended AudioContext...');
                 await Howler.ctx.resume();
+                console.log('[AudioManager] restoreAudio: AudioContext resumed');
             }
 
-            // 2. Đợi OS un-duck audio (không có API để detect, chỉ có cách dùng fixed delay)
-            // Android cần ~300ms, iOS ~500ms sau khi mic tracks stop
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const recoveryMs = isIOS ? 500 : 300;
-            await new Promise<void>(r => setTimeout(r, recoveryMs));
+            // 2. Đợi OS-level audio ducking phục hồi (cứng, không có cách detect)
+            // iOS cần ~500-600ms, Android ~300ms sau khi mic tracks stop
+            const recoverMs = /iPad|iPhone|iPod/.test(navigator.userAgent) ? 600 : 300;
+            await new Promise<void>(r => setTimeout(r, recoverMs));
 
-            // 3. Không dùng Howler.volume(0) → nó tạo ra chính cái silent gap
-            // Chỉ cần đảm bảo volume đang đúng
-            if (Howler.volume() < 0.5) {
-                Howler.volume(1.0);
-            }
+            // 3. Silent kick để force browser re-route audio pipeline sang speaker
+            await new Promise<void>((resolve) => {
+                const silent = new Howl({
+                    src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
+                    volume: 0.001,
+                    html5: true, // Cùng pipeline với các sound trong game
+                });
+                silent.once('end', () => { silent.unload(); resolve(); });
+                silent.once('playerror', () => { silent.unload(); resolve(); });
+                // WAV 0-byte → end fire ngay → dùng timeout làm thực sự delay
+                setTimeout(() => resolve(), 100);
+                silent.play();
+            });
 
-            console.log(`[AudioManager] restoreAudio: Done after ${recoveryMs}ms delay`);
+            console.log('[AudioManager] restoreAudio: done');
         } catch (e) {
             console.warn('[AudioManager] restoreAudio error:', e);
         }
