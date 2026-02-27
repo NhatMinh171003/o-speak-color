@@ -308,24 +308,20 @@ class AudioManager {
                 console.log('[AudioManager] restoreAudio: AudioContext resumed');
             }
 
-            // 2. Đợi OS-level audio ducking phục hồi (cứng, không có cách detect)
-            // iOS cần ~500-600ms, Android ~300ms sau khi mic tracks stop
-            const recoverMs = /iPad|iPhone|iPod/.test(navigator.userAgent) ? 600 : 300;
+            // 2. Đợi OS-level audio ducking phục hồi
+            // Giữ nhỏ để không delay UX, nhưng đủ để OS switch routing
+            const recoverMs = /iPad|iPhone|iPod/.test(navigator.userAgent) ? 200 : 80;
             await new Promise<void>(r => setTimeout(r, recoverMs));
 
-            // 3. Silent kick để force browser re-route audio pipeline sang speaker
-            await new Promise<void>((resolve) => {
-                const silent = new Howl({
-                    src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
-                    volume: 0.001,
-                    html5: true, // Cùng pipeline với các sound trong game
-                });
-                silent.once('end', () => { silent.unload(); resolve(); });
-                silent.once('playerror', () => { silent.unload(); resolve(); });
-                // WAV 0-byte → end fire ngay → dùng timeout làm thực sự delay
-                setTimeout(() => resolve(), 100);
-                silent.play();
+            // 3. Silent kick chạy nền (fire-and-forget) - không cần await
+            const silent = new Howl({
+                src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
+                volume: 0.001,
+                html5: true,
             });
+            silent.once('end', () => silent.unload());
+            silent.once('playerror', () => silent.unload());
+            silent.play();
 
             console.log('[AudioManager] restoreAudio: done');
         } catch (e) {
