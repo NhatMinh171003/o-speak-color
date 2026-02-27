@@ -294,41 +294,34 @@ class AudioManager {
     }
 
     /**
-     * Safari Audio Fix: Restore audio volume after microphone usage
-     * Safari reduces audio volume when microphone is active (ducking behavior).
-     * Call this method after stopping recording to restore normal audio volume.
+     * Restore audio sau khi ghi âm (Android + iOS fix)
+     * - Android: OS duck audio ở hardware level khi mic active, cần ~300ms để un-duck
+     * - iOS/Safari: AudioContext có thể bị suspended, cần resume
+     * QUAN TRỌNG: Method này phải là async và được await bởi caller
      */
-    restoreAudioAfterRecording(): void {
+    async restoreAudioAfterRecording(): Promise<void> {
         try {
-            // 1. Resume AudioContext nếu bị suspended
+            // 1. Resume AudioContext nếu bị suspended (iOS)
             if (Howler.ctx && Howler.ctx.state === 'suspended') {
-                console.log('[AudioManager] Safari fix: Resuming AudioContext...');
-                Howler.ctx.resume();
+                console.log('[AudioManager] restoreAudio: Resuming suspended AudioContext...');
+                await Howler.ctx.resume();
             }
 
-            // 2. Reset global volume để force Safari refresh audio routing
-            const currentVolume = Howler.volume();
-            Howler.volume(0);
+            // 2. Đợi OS un-duck audio (không có API để detect, chỉ có cách dùng fixed delay)
+            // Android cần ~300ms, iOS ~500ms sau khi mic tracks stop
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const recoveryMs = isIOS ? 500 : 300;
+            await new Promise<void>(r => setTimeout(r, recoveryMs));
 
-            // Small delay before restoring volume
-            setTimeout(() => {
-                Howler.volume(currentVolume || 1.0);
-                console.log('[AudioManager] Safari fix: Volume restored to', currentVolume || 1.0);
-            }, 50);
+            // 3. Không dùng Howler.volume(0) → nó tạo ra chính cái silent gap
+            // Chỉ cần đảm bảo volume đang đúng
+            if (Howler.volume() < 0.5) {
+                Howler.volume(1.0);
+            }
 
-            // 3. Play silent sound to "wake up" Safari audio
-            const silentSound = new Howl({
-                src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
-                volume: 0.001, // Nearly silent
-                html5: true,
-            });
-            silentSound.once('end', () => {
-                silentSound.unload();
-            });
-            silentSound.play();
-
+            console.log(`[AudioManager] restoreAudio: Done after ${recoveryMs}ms delay`);
         } catch (e) {
-            console.warn('[AudioManager] Safari fix error:', e);
+            console.warn('[AudioManager] restoreAudio error:', e);
         }
     }
 
