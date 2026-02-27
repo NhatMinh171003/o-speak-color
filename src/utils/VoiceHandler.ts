@@ -82,13 +82,13 @@ export class VoiceHandler {
     // Callbacks
     private onStateChange?: (state: RecordingState) => void;
     private onVolumeChange?: (volume: number, isAboveThreshold: boolean) => void;
-    private onComplete?: (audioBlob: Blob) => void;
+    private onComplete?: (audioBlob: Blob) => Promise<void> | void;
     private onError?: (error: string) => void;
 
     constructor(callbacks?: {
         onStateChange?: (state: RecordingState) => void;
         onVolumeChange?: (volume: number, isAboveThreshold: boolean) => void;
-        onComplete?: (audioBlob: Blob) => void;
+        onComplete?: (audioBlob: Blob) => Promise<void> | void;
         onError?: (error: string) => void;
     }) {
         this.onStateChange = callbacks?.onStateChange;

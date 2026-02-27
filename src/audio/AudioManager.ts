@@ -237,14 +237,18 @@ class AudioManager {
     /**
      * Khôi phục audio sau khi ghi âm (Mobile workaround)
      * Mobile browsers duck audio khi mic hoạt động, cần thời gian để phục hồi.
-     * Method này resume context + phát silent sound để kick audio pipeline.
+     * Method này resume context + đợi OS un-duck xong.
      * @returns Promise resolve sau khi audio đã sẵn sàng phát lại bình thường
      */
     async restoreAudioAfterRecording(): Promise<void> {
         this.ensureContextRunning();
         await this.unlockAudioAsync();
 
-        // Phát silent sound để warm-up audio pipeline sau khi mic tắt
+        // Đợi OS-level audio ducking phục hồi TRƯỚC khi play warm-up
+        // iOS cần ~400-600ms, Android ~200-300ms
+        const OS_DUCK_RECOVER_MS = /iPad|iPhone|iPod/.test(navigator.userAgent) ? 600 : 350;
+        await new Promise<void>(r => setTimeout(r, OS_DUCK_RECOVER_MS));
+
         return this.warmUpAudio();
     }
 
@@ -258,19 +262,13 @@ class AudioManager {
                 const silent = new Howl({
                     src: ['data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA=='],
                     volume: 0.001,
-                    html5: this.useHtml5, // Dùng CÙNG pipeline với các sound trong game (html5 trên iOS)
+                    html5: this.useHtml5,
                 });
-                silent.once('end', () => {
-                    silent.unload();
-                    resolve();
-                });
-                silent.once('playerror', () => {
-                    silent.unload();
-                    resolve();
-                });
-                // Fallback timeout nếu sound không fire event
-                setTimeout(() => resolve(), 500); // 500ms để iOS có đủ thời gian recover
+                silent.once('end', () => { silent.unload(); resolve(); });
+                silent.once('playerror', () => { silent.unload(); resolve(); });
                 silent.play();
+                // Fallback: nếu end/playerror không fire (WAV 0-byte), resolve sau 150ms
+                setTimeout(() => resolve(), 150);
             } catch {
                 resolve();
             }
